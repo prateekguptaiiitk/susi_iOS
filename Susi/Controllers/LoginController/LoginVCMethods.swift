@@ -42,6 +42,31 @@ extension LoginViewController {
         passwordTextField.addTarget(self, action: #selector(textFieldDidChange(textField:)), for: .editingChanged)
     }
 
+    func checkReachability() {
+        reachability.whenReachable = { reachability in
+            self.setUIBasedOnReachability(value: true)
+        }
+        reachability.whenUnreachable = { reachability in
+            self.setUIBasedOnReachability(value: false)
+        }
+    }
+
+    func setUIBasedOnReachability(value: Bool) {
+        DispatchQueue.main.async {
+            self.loginButton.isEnabled = value
+            self.forgotPassword.isEnabled = value
+            self.skipButton.isEnabled = value
+            self.forgotPassword.isEnabled = value
+            self.skipButton.isEnabled = value
+            self.signUpButton.isEnabled = value
+            if value {
+                self.alert.dismiss(animated: true, completion: nil)
+            } else {
+                self.present(self.alert, animated: true, completion: nil)
+            }
+        }
+    }
+
     @IBAction func toggleRadioButtons(_ sender: M13Checkbox) {
         if sender.checkState == .checked {
             addressTextField.tag = 1
@@ -95,7 +120,7 @@ extension LoginViewController {
 
             self.indicatorView.startAnimating()
 
-            Client.sharedInstance.recoverPassword(params as [String: AnyObject]) { (_, message) in
+            Client.sharedInstance.recoverPassword(params as [String: AnyObject]) { (_, _) in
                 DispatchQueue.main.async {
                     self.indicatorView.stopAnimating()
 
@@ -198,7 +223,7 @@ extension LoginViewController {
                 emailTextField.dividerActiveColor = .green
             }
         } else if textField == passwordTextField, let password = passwordTextField.text {
-            if password.isEmpty || password.count < 5 {
+            if password.isEmpty || password.count < 6 || password.count > 64 {
                 passwordTextField.dividerActiveColor = .red
             } else {
                 passwordTextField.dividerActiveColor = .green

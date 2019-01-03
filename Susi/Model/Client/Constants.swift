@@ -13,6 +13,7 @@ extension Client {
         static let DuckDuckGo = "http://api.duckduckgo.com"
         static let YoutubeSearch = "https://www.googleapis.com/youtube/v3/search"
         static let SnowboyTrain = "https://snowboy.kitt.ai/api/v1/train/"
+        static let SpeakerBaseURL = "http://10.0.0.1:5000"
     }
 
     struct Methods {
@@ -31,7 +32,14 @@ extension Client {
         static let GetRatingByUser = "/cms/getRatingByUser.json"
         static let FeedbackSkill = "/cms/feedbackSkill.json"
         static let GetSkillFeedback = "/cms/getSkillFeedback.json"
-        static let baseSkillImagePath = "https://raw.githubusercontent.com/fossasia/susi_skill_data/master/models/"
+        static let baseSkillImagePath = "/cms/getImage.png"
+        static let FeedbackLog = "/cms/feedbackLog.json"
+        static let WifiCredentials = "/wifi_credentials"
+        static let Auth = "/auth"
+        static let Config = "/config"
+        static let SpeakerConfig = "/speaker_config"
+        static let CheckRegistration = "/aaa/checkRegistration.json"
+        static let ReportSkill = "/cms/reportSkill.json"
     }
 
     struct ResponseMessages {
@@ -59,6 +67,8 @@ extension Client {
         static let ValidSeconds = "valid_seconds"
         static let EmailOfAccount = "changepassword"
         static let NewPassword = "newpassword"
+        static let EmailExists = "exists"
+        static let CheckEmail = "check_email"
     }
 
     struct ChatKeys {
@@ -89,6 +99,7 @@ extension Client {
         static let CountryName = "country_name"
         static let CountryCode = "country_code"
         static let deviceType = "device_type"
+        static let Identifier = "identifier"
     }
 
     struct WebsearchKeys {
@@ -134,6 +145,11 @@ extension Client {
         static let language = "language"
         static let rating = "rating"
         static let feedback = "feedback"
+        static let userQuery = "user_query"
+        static let susiReply = "susi_reply"
+        static let countryName = "country_name"
+        static let countryCode = "country_code"
+        static let deviceType = "device_type"
     }
 
     struct HotwordKeys {
@@ -167,6 +183,8 @@ extension Client {
         static let language = "language"
         static let dynamicContent = "dynamic_content"
         static let skillRating = "skill_rating"
+        static let accessToken = "access_token"
+        static let feedback = "feedback"
     }
 
     struct FiveStarRating {
@@ -182,6 +200,19 @@ extension Client {
         static let stars = "stars"
         static let ratings = "ratings"
         static let AccessToken = "access_token"
+    }
+
+    struct SmartSpeaker {
+        static let wifiSSID = "wifissid"
+        static let wifiPassword = "wifipassd"
+        static let auth = "auth"
+        static let email = "email"
+        static let password = "password"
+        static let STT = "stt"
+        static let TTS = "tts"
+        static let hotword = "hotword"
+        static let wake = "wake"
+        static let roomName = "room_name"
     }
 
 }

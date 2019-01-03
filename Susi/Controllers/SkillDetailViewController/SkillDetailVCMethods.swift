@@ -16,7 +16,7 @@ extension SkillDetailViewController {
         ratingsBackStackView.addGestureRecognizer(tap)
     }
 
-     // force dismiss keyboard if open.
+    // force dismiss keyboard if open.
     @objc func dismissKeyboard() {
         if self.skillFeedbackTextField.isFirstResponder {
             self.skillFeedbackTextField.resignFirstResponder()
@@ -26,17 +26,17 @@ extension SkillDetailViewController {
     func registerKeyboardNotifications() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillShow(notification:)),
-                                               name: NSNotification.Name.UIKeyboardWillShow,
+                                               name: UIResponder.keyboardWillShowNotification,
                                                object: nil)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(keyboardWillHide(notification:)),
-                                               name: NSNotification.Name.UIKeyboardWillHide,
+                                               name: UIResponder.keyboardWillHideNotification,
                                                object: nil)
     }
 
     @objc func keyboardWillShow(notification: NSNotification) {
         let userInfo: NSDictionary = notification.userInfo! as NSDictionary
-        if let keyboardInfo = userInfo[UIKeyboardFrameBeginUserInfoKey] as? NSValue {
+        if let keyboardInfo = userInfo[UIResponder.keyboardFrameBeginUserInfoKey] as? NSValue {
             let keyboardSize = keyboardInfo.cgRectValue.size
             let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardSize.height, right: 0)
             scrollView.contentInset = contentInsets
@@ -96,6 +96,13 @@ extension SkillDetailViewController {
             self.chatViewController?.inputTextField.text = query
             self.chatViewController?.handleSend()
         })
+        // In-case of 3D-touch home action
+        if let chatVC = self.chatViewController {
+            present(chatVC, animated: true, completion: {
+                chatVC.inputTextField.text = query
+                chatVC.handleSend()
+            })
+        }
     }
 
     func addSkillDescription() {
@@ -124,13 +131,68 @@ extension SkillDetailViewController {
 
     }
 
+    func setupReportSkillButton() {
+        if let delegate = UIApplication.shared.delegate as? AppDelegate, let _ = delegate.currentUser {
+            view.addSubview(reportSkillButton)
+            reportSkillButton.widthAnchor.constraint(equalToConstant: 140).isActive = true
+            reportSkillButton.heightAnchor.constraint(equalToConstant: 32).isActive = true
+            reportSkillButton.leftAnchor.constraint(equalTo: contentType.leftAnchor).isActive = true
+            reportSkillButton.topAnchor.constraint(equalTo: contentType.bottomAnchor, constant: 8).isActive = true
+
+            reportSkillButton.addTarget(self, action: #selector(reportSkillAction), for: .touchUpInside)
+        }
+    }
+
+    @objc func reportSkillAction() {
+        let reportSkillAlert = UIAlertController(title: "Report Skill", message: "Flag as inappropriate", preferredStyle: .alert)
+        reportSkillAlert.addTextField(configurationHandler: { (textfield: UITextField) in
+            textfield.placeholder = "Feedback message"
+            textfield.borderStyle = .roundedRect
+        })
+        let reportAction = UIAlertAction(title: "Report", style: .default, handler: { _ -> Void in
+            let feedbackTextField = reportSkillAlert.textFields![0] as UITextField
+            if let feedbackMessage = feedbackTextField.text {
+                self.reportSkill(feedbackMessage: feedbackMessage)
+            }
+        })
+        let cancleAction = UIAlertAction(title: "Cancel", style: .cancel, handler: { (_: UIAlertAction) -> Void in
+        })
+        reportSkillAlert.addAction(cancleAction)
+        reportSkillAlert.addAction(reportAction)
+        self.present(reportSkillAlert, animated: true, completion: nil)
+        removeTextBorder(for: reportSkillAlert)
+    }
+
+    func reportSkill(feedbackMessage: String) {
+        if let delegate = UIApplication.shared.delegate as? AppDelegate, let user = delegate.currentUser {
+
+            let params = [
+                Client.SkillListing.model: skill?.model as AnyObject,
+                Client.SkillListing.group: skill?.group as AnyObject,
+                Client.SkillListing.skill: skill?.skillKeyName as AnyObject,
+                Client.SkillListing.language: Locale.current.languageCode as AnyObject,
+                Client.SkillListing.accessToken: user.accessToken as AnyObject,
+                Client.SkillListing.feedback: feedbackMessage as AnyObject
+            ]
+
+            Client.sharedInstance.reportSkill(params) { (success, error) in
+                DispatchQueue.main.async {
+                    if success {
+                        self.view.makeToast("Skill reported successfully")
+                    } else if let error = error {
+                        self.view.makeToast(error)
+                    }
+                }
+            }
+        }
+    }
+
     func setupFeedbackTextField() {
         skillFeedbackTextField.placeholderActiveColor = UIColor.skillFeedbackColor()
         skillFeedbackTextField.dividerActiveColor = UIColor.skillFeedbackColor()
     }
 
     func getRatingByUser() {
-
 
         if let delegate = UIApplication.shared.delegate as? AppDelegate, let user = delegate.currentUser {
             getRatingParam = [
@@ -160,6 +222,17 @@ extension SkillDetailViewController {
         barChartView.transform = CGAffineTransform(rotationAngle: .pi/2.0)
         barChartView.barSpacing = 3
         barChartView.backgroundColor = UIColor.barBackgroundColor()
+    }
+
+    func removeTextBorder(for alterController: UIAlertController) {
+        for textfield: UIView in alterController.textFields! {
+            let container: UIView? = textfield.superview
+            let effectView = container?.superview?.subviews[0]
+            if effectView != nil {
+                container?.backgroundColor = UIColor.clear
+                effectView?.removeFromSuperview()
+            }
+        }
     }
 
 }
@@ -249,7 +322,7 @@ extension SkillDetailViewController: UITextFieldDelegate {
             }
         } else {
             let loginAlertController = UIAlertController(title: "You are not logged-in", message: "Please login to post skill feedback", preferredStyle: .alert)
-            let loginAction = UIAlertAction(title: "Login", style: .default, handler: { action in
+            let loginAction = UIAlertAction(title: "Login", style: .default, handler: { _ in
                 self.presentLoginScreen()
             })
             let cancleAction = UIAlertAction(title: "Cancle", style: .cancel, handler: nil)
@@ -271,7 +344,7 @@ extension SkillDetailViewController: UITextFieldDelegate {
             Client.FiveStarRating.AccessToken: accessToken as AnyObject
         ]
 
-        Client.sharedInstance.postSkillFeedback(postFeedbackParam) { (feedback, success, responseMessage) in
+        Client.sharedInstance.postSkillFeedback(postFeedbackParam) { (_, success, responseMessage) in
             DispatchQueue.main.async {
                 if success {
                     self.skillFeedbackTextField.text = ""
@@ -304,10 +377,10 @@ extension SkillDetailViewController: UITableViewDelegate, UITableViewDataSource 
             return 0
         }
         if feedbacks.count < 4 {
-            feedbackTableHeighConstraint.constant = CGFloat(72 * feedbacks.count)
+            feedbackTableHeighConstraint.constant = CGFloat(75 * feedbacks.count)
             return feedbacks.count
         } else {
-            feedbackTableHeighConstraint.constant = 260.0
+            feedbackTableHeighConstraint.constant = 269.0
             return 4
         }
     }
@@ -316,7 +389,7 @@ extension SkillDetailViewController: UITableViewDelegate, UITableViewDataSource 
         if indexPath.row == 3 {
             return 44.0
         } else {
-            return 72.0
+            return 75.0
         }
     }
 
@@ -368,7 +441,7 @@ extension SkillDetailViewController: UITableViewDelegate, UITableViewDataSource 
             Client.SkillListing.skill: skill?.skillKeyName as AnyObject
         ]
 
-        Client.sharedInstance.getFeedbackData(getFeedbackParam) { (feedbacks, success, message) in
+        Client.sharedInstance.getFeedbackData(getFeedbackParam) { (feedbacks, success, _) in
             DispatchQueue.main.async {
                 if success {
                     self.feedbacks = feedbacks

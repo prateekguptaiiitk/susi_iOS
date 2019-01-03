@@ -72,6 +72,7 @@ extension SignUpViewController {
 
     // Sign Up User
     @objc func performSignUp() {
+
         if isValid() {
 
             toggleEditing()
@@ -133,7 +134,7 @@ extension SignUpViewController {
                 emailTextField.dividerActiveColor = .green
             }
         } else if textField == passwordTextField, let password = passwordTextField.text {
-            if password.isEmpty || password.count < 5 {
+            if password.isEmpty || password.count < 6 || password.count > 64 {
                 passwordTextField.dividerActiveColor = .red
             } else {
                 passwordTextField.dividerActiveColor = .green
@@ -178,6 +179,30 @@ extension SignUpViewController {
             }
         }
         return true
+    }
+
+    // Check if email is already registered or not
+    func checkIfEmailAlreadyExists() {
+        let emailCheckParam = [
+            Client.UserKeys.CheckEmail: emailTextField.text!.lowercased() as AnyObject
+        ]
+        Client.sharedInstance.checkRegistration(emailCheckParam) { (exists, success) in
+            DispatchQueue.main.async {
+                if success, exists! {
+                    self.view.makeToast(ControllerConstants.emailAlreadyExists)
+                }
+            }
+        }
+    }
+
+}
+
+extension SignUpViewController: UITextFieldDelegate {
+
+    func textFieldDidEndEditing(_ textField: UITextField, reason: UITextField.DidEndEditingReason) {
+        if textField.accessibilityIdentifier == "email" {
+            checkIfEmailAlreadyExists()
+        }
     }
 
 }

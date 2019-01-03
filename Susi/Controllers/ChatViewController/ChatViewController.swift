@@ -32,13 +32,6 @@ class ChatViewController: UICollectionViewController {
 
     let alert = UIAlertController(title: "Warning", message: "Please Connect to Internet", preferredStyle: .alert)
 
-    // youtube player
-    lazy var youtubePlayer: YouTubePlayerView = {
-        let frame = CGRect(x: 0, y: 0, width: self.view.frame.width - 16, height: self.view.frame.height * 1 / 3)
-        let player = YouTubePlayerView(frame: frame)
-        return player
-    }()
-
     // scroll down button
     lazy var scrollButton: UIButton = {
         let button = UIButton()
@@ -99,9 +92,6 @@ class ChatViewController: UICollectionViewController {
     // used to send user's location to the server
     var locationManager = CLLocationManager()
 
-    // used as an overlay to dismiss the youtube player
-    let blackView = UIView()
-
     // snowboy resource
     let RESOURCE = Bundle.main.path(forResource: "common", ofType: "res")
 
@@ -160,21 +150,7 @@ class ChatViewController: UICollectionViewController {
         loadMessages()
         addSkillListingButton()
         addScrollButton()
-
-        reachability.whenReachable = { reachability in
-            DispatchQueue.main.async {
-                self.inputTextField.isEditable = true
-                self.alert.dismiss(animated: true, completion: nil)
-            }
-        }
-
-        reachability.whenUnreachable = { reachability in
-            DispatchQueue.main.async {
-                self.inputTextField.isEditable = false
-                self.present(self.alert, animated: true, completion: nil)
-            }
-        }
-
+        checkReachability()
     }
 
     override func viewWillAppear(_ animated: Bool) {

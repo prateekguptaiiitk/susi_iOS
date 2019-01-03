@@ -26,6 +26,17 @@ class DevicesActivityViewController: UITableViewController {
         return button
     }()
 
+    var isSetupDone: Bool = false {
+        didSet {
+            self.tableView.reloadData()
+        }
+    }
+
+    var wifiAlertController = UIAlertController()
+    var passwordAlertController = UIAlertController()
+    var alertController = UIAlertController()
+    var roomAlertController = UIAlertController()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTitle()
@@ -41,16 +52,30 @@ class DevicesActivityViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         tableView.tableFooterView = UIView(frame: .zero)
-        let cell = tableView.dequeueReusableCell(withIdentifier: "DeviceCell", for: indexPath)
-        cell.imageView?.image = UIImage(named: "device_icon")
-        if let speakerSSID = fetchSSIDInfo(), speakerSSID == "susi.ai" {
+        let cell = tableView.dequeueReusableCell(withIdentifier: ControllerConstants.DeviceActivity.deviceCellIndentifier, for: indexPath)
+        if let speakerSSID = fetchSSIDInfo(), speakerSSID == ControllerConstants.DeviceActivity.susiSSID {
             cell.accessoryType = .disclosureIndicator
+            cell.imageView?.image = ControllerConstants.Images.availableDevice
             cell.textLabel?.text = speakerSSID
+            cell.detailTextLabel?.text = ControllerConstants.DeviceActivity.connectedDetailText
+            if isSetupDone {
+                cell.textLabel?.text = ControllerConstants.DeviceActivity.successfullyConnected
+                cell.detailTextLabel?.text = ControllerConstants.DeviceActivity.doneSetupDetailText
+            }
         } else {
             cell.accessoryType = .none
-            cell.textLabel?.text = "No device connected yet"
+            cell.textLabel?.text = ControllerConstants.DeviceActivity.noDeviceTitle
+            cell.detailTextLabel?.text = ControllerConstants.DeviceActivity.notConnectedDetailText
+            cell.imageView?.image = ControllerConstants.Images.deviceIcon
         }
         return cell
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.row == 0, let speakerSSID = fetchSSIDInfo(), speakerSSID == ControllerConstants.DeviceActivity.susiSSID, !isSetupDone {
+            // Open a popup to select Rooms
+            presentRoomsPopup()
+        }
     }
 
 }

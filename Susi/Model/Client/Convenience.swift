@@ -502,6 +502,60 @@ extension Client {
         })
     }
 
+    func sendFeedbackLog(_ params: [String: AnyObject], _ completion: @escaping(_ success: Bool, _ error: String?) -> Void) {
+        let url = getApiUrl(UserDefaults.standard.object(forKey: ControllerConstants.UserDefaultsKeys.ipAddress) as! String, Methods.FeedbackLog)
+
+        _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
+
+            if let _ = message {
+                completion(false, ResponseMessages.ServerError)
+            } else if let results = results {
+
+                guard let response = results as? [String: AnyObject] else {
+                    completion(false, ResponseMessages.InvalidParams)
+                    return
+                }
+
+                if let accepted = response[ControllerConstants.accepted] as? Bool {
+                    if accepted {
+                        completion(true, nil)
+                        return
+                    }
+                    completion(false, ResponseMessages.ServerError)
+                    return
+                }
+            }
+            return
+        })
+    }
+
+    func reportSkill(_ params: [String: AnyObject], _ completion: @escaping(_ success: Bool, _ error: String?) -> Void) {
+        let url = getApiUrl(UserDefaults.standard.object(forKey: ControllerConstants.UserDefaultsKeys.ipAddress) as! String, Methods.ReportSkill)
+
+        _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
+
+            if let _ = message {
+                completion(false, ResponseMessages.ServerError)
+            } else if let results = results {
+
+                guard let response = results as? [String: AnyObject] else {
+                    completion(false, ResponseMessages.InvalidParams)
+                    return
+                }
+
+                if let accepted = response[ControllerConstants.accepted] as? Bool {
+                    if accepted {
+                        completion(true, nil)
+                        return
+                    }
+                    completion(false, ResponseMessages.ServerError)
+                    return
+                }
+            }
+            return
+        })
+    }
+
     func getFeedbackData(_ params: [String: AnyObject], _ completion: @escaping(_ feedbacks: [Feedback]?, _ success: Bool, _ error: String?) -> Void) {
         let url = getApiUrl(UserDefaults.standard.object(forKey: ControllerConstants.UserDefaultsKeys.ipAddress) as! String, Methods.GetSkillFeedback)
         _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
@@ -522,6 +576,87 @@ extension Client {
                 completion(nil, false, ResponseMessages.ServerError)
                 return
             }
+            return
+        })
+    }
+
+    func checkRegistration(_ params: [String: AnyObject], _ completion: @escaping(_ emailExists: Bool?, _ success: Bool) -> Void) {
+        let url = getApiUrl(UserDefaults.standard.object(forKey: ControllerConstants.UserDefaultsKeys.ipAddress) as! String, Methods.CheckRegistration)
+        _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
+            if let _ = message {
+                completion(nil, false)
+            } else if let results = results {
+
+                guard let response = results as? [String: AnyObject] else {
+                    completion(nil, false)
+                    return
+                }
+
+                if let exists = response[Client.UserKeys.EmailExists] as? Bool {
+                    completion(exists, true)
+                    return
+                }
+                completion(nil, false)
+                return
+            }
+            return
+        })
+    }
+
+    // MARK: - Smart Speaker Methods
+
+    func sendWifiCredentials(_ params: [String: AnyObject], _ completion: @escaping(_ success: Bool, _ error: String?) -> Void) {
+        let url = getApiUrl(APIURLs.SpeakerBaseURL, Methods.WifiCredentials)
+        _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
+            if let _ = message {
+                completion(false, ResponseMessages.ServerError)
+            } else if results != nil {
+                completion(true, nil)
+                return
+            }
+            completion(false, ResponseMessages.ServerError)
+            return
+        })
+    }
+
+    func sendAuthCredentials(_ params: [String: AnyObject], _ completion: @escaping(_ success: Bool, _ error: String?) -> Void) {
+        let url = getApiUrl(APIURLs.SpeakerBaseURL, Methods.Auth)
+        _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
+            if let _ = message {
+                completion(false, ResponseMessages.ServerError)
+            } else if results != nil {
+                completion(true, nil)
+                return
+            }
+            completion(false, ResponseMessages.ServerError)
+            return
+        })
+    }
+
+    func setConfiguration(_ params: [String: AnyObject], _ completion: @escaping(_ success: Bool, _ error: String?) -> Void) {
+        let url = getApiUrl(APIURLs.SpeakerBaseURL, Methods.Config)
+        _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
+            if let _ = message {
+                completion(false, ResponseMessages.ServerError)
+            } else if results != nil {
+                completion(true, nil)
+                return
+            }
+            completion(false, ResponseMessages.ServerError)
+            return
+        })
+    }
+
+    func speakerConfiguration(_ params: [String: AnyObject], _ completion: @escaping(_ success: Bool, _ error: String?) -> Void) {
+        let url = getApiUrl(APIURLs.SpeakerBaseURL, Methods.SpeakerConfig)
+        _ = makeRequest(url, .get, [:], parameters: params, completion: { (results, message) in
+            if let _ = message {
+                completion(false, ResponseMessages.ServerError)
+            } else if results != nil {
+                completion(true, nil)
+                return
+            }
+            completion(false, ResponseMessages.ServerError)
             return
         })
     }

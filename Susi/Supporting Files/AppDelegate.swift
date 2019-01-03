@@ -14,14 +14,18 @@ import BouncyLayout
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    var shortcutHandled: Bool!
+    var shortcutIdentifier: String?
 
     // user
     var currentUser: User?
 
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        UIApplication.shared.isStatusBarHidden = false
         initializeRealm()
         resetStateIfUITesting()
         checkAndAssignDefaultIfFirstLaunch()
+
         return true
     }
 
@@ -71,6 +75,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window?.makeKeyAndVisible()
     }
 
+    func presentLoginScreens() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let loginViewController = storyboard.instantiateViewController(withIdentifier: "LoginController")
+        self.window?.rootViewController = loginViewController
+        self.window?.makeKeyAndVisible()
+    }
+
     func presetChatScreen() {
         let layout = BouncyLayout()
         let vc = ChatViewController(collectionViewLayout: layout)
@@ -85,11 +96,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 let user = User(dictionary: userData)
                 currentUser = user
 
-                    if user.expiryTime > Date() {
-                        self.presetChatScreen()
-                    } else {
-                        self.resetDB()
-                    }
+                if user.expiryTime > Date() {
+                    self.presetChatScreen()
+                } else {
+                    self.resetDB()
+                    self.presentLoginScreens()
+                }
             }
         }
     }
@@ -101,4 +113,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
 
+    func application(_ application: UIApplication,
+                     performActionFor shortcutItem: UIApplicationShortcutItem,
+                     completionHandler: @escaping (Bool) -> Void) {
+        shortcutIdentifier = shortcutItem.type
+        shortcutHandled = true
+        completionHandler(shortcutHandled)
+    }
+
+    func applicationDidBecomeActive(_ application: UIApplication) {
+        if shortcutHandled == true {
+            shortcutHandled = false
+            if shortcutIdentifier == "OpenSkillAction" {
+                let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                if let skillsVC = storyboard.instantiateViewController(withIdentifier: "SkillListingController") as? SkillListingViewController {
+                    let layout = BouncyLayout()
+                    let chatViewController = ChatViewController(collectionViewLayout: layout)
+                    skillsVC.chatViewController = chatViewController
+                    let nvc = AppNavigationController(rootViewController: skillsVC)
+                    self.window?.rootViewController = nvc
+                    self.window?.makeKeyAndVisible()
+                }
+            }
+        }
+    }
 }

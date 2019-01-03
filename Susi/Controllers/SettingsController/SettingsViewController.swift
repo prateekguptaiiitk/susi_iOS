@@ -57,7 +57,8 @@ class SettingsViewController: UITableViewController {
     @IBOutlet weak var devicesSubtitle: UILabel!
     @IBOutlet weak var setupDeviceTitle: UILabel!
     @IBOutlet weak var susiVoiceLanguageLabel: UILabel!
-
+    @IBOutlet weak var aboutUsTitle: UILabel!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         assignDefaults()
@@ -125,14 +126,14 @@ class SettingsViewController: UITableViewController {
                 presentResetPasswordController()
             } else if row == 3 {
                 logoutUser()
-            }
+            } 
         }
         tableView.deselectRow(at: indexPath, animated: true)
     }
 
     override func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
         let user = UserDefaults.standard.dictionary(forKey: ControllerConstants.UserDefaultsKeys.user)
-        if indexPath.section == 4 && indexPath.row == 2 && user == nil {
+        if indexPath.section == 5 && indexPath.row == 2 && user == nil {
             cell.isHidden = true
         }
     }
@@ -169,6 +170,7 @@ class SettingsViewController: UITableViewController {
         shareSusiSubtitle.text = ControllerConstants.Settings.shareSusiSubtitle.localized()
         resetPassTitle.text = ControllerConstants.Settings.resetPass.localized()
         logoutTitle.text = ControllerConstants.Settings.logout.localized()
+        aboutUsTitle.text = ControllerConstants.Settings.about.localized()
         if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
             logoutTitle.text = (appDelegate.currentUser != nil) ? ControllerConstants.Settings.logout.localized() : ControllerConstants.Settings.login.localized()
         }
